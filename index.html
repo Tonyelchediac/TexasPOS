@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TexasPOS</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1><i class="fas fa-cash-register"></i> TexasPOS</h1>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-btn active" onclick="loadPage('dashboard')">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-btn" onclick="loadPage('pos')">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Point of Sale</span>
+                </button>
+                <button class="nav-btn" onclick="loadPage('settings')">
+                    <i class="fas fa-sliders-h"></i>
+                    <span>Inventory</span>
+                </button>
+                <button class="nav-btn" onclick="loadPage('data')">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Sales Analytics</span>
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="nav-btn logout-btn" onclick="finishActivity()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>End Session</span>
+                </button>
+                <div class="user-profile">
+                    <div class="avatar">AD</div>
+                    <div class="user-info">
+                        <span class="username">Admin User</span>
+                        <span class="user-role">Manager</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content" id="mainContent">
+            <header class="content-header">
+                <div class="header-left">
+                    <h2 id="pageTitle">Dashboard</h2>
+                    <div class="breadcrumb" id="breadcrumb">Home</div>
+                </div>
+                <div class="header-right">
+                    <!-- <div class="notification-bell">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </div> -->
+                    <div class="current-date" id="currentDate"></div>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <!-- Content will be loaded dynamically -->
+                <div class="dashboard" id="dashboardContent">
+                    <div class="stats-cards">
+                        <div class="stat-card revenue">
+                            <div class="stat-icon">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Today's Revenue</h3>
+                                <p id="todayRevenue">$0.00</p>
+                            </div>
+                        </div>
+                        <div class="stat-card sales">
+                            <div class="stat-icon">
+                                <i class="fas fa-receipt"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Today's Sales</h3>
+                                <p id="todaySales">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card items">
+                            <div class="stat-icon">
+                                <i class="fas fa-box-open"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Inventory Items</h3>
+                                <p id="inventoryCount">0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="quick-actions">
+                        <h3>Quick Actions</h3>
+                        <div class="action-buttons">
+                            <button class="action-btn" onclick="loadPage('pos')">
+                                <i class="fas fa-plus-circle"></i>
+                                <span>New Sale</span>
+                            </button>
+                            <button class="action-btn" onclick="loadPage('settings')">
+                                <i class="fas fa-boxes"></i>
+                                <span>Manage Inventory</span>
+                            </button>
+                            <button class="action-btn" onclick="printReceipt()">
+                                <i class="fas fa-print"></i>
+                                <span>Print Last Receipt</span>
+                            </button>
+                            <button class="action-btn" onclick="loadPage('data')">
+                                <i class="fas fa-file-export"></i>
+                                <span>Export Data</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="recent-activity">
+                        <h3>Recent Transactions</h3>
+                        <div class="activity-list" id="recentTransactions">
+                            <div class="empty-state">
+                                <i class="fas fa-receipt"></i>
+                                <p>No recent transactions</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
