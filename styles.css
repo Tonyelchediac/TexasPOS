@@ -1115,10 +1115,6 @@ body {
     }
     
     .sidebar-footer {
-        display: flex;
-    }
-
-    .user-profile {
         display: none;
     }
     

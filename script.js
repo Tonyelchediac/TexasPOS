@@ -869,14 +869,13 @@ function downloadSalesData() {
     const sortedItems = Object.values(todaySalesData.items).sort((a, b) => b.quantity - a.quantity);
     const totalItemsSold = Object.values(todaySalesData.items).reduce((sum, item) => sum + item.quantity, 0);
     const uniqueItemsSold = Object.keys(todaySalesData.items).length;
-    const totalRevenueLBP = convertToLBP(todaySalesData.total);
 
     let dataText = `TEXAS POS SALES REPORT - ${formatDateDisplay(today)}\n\n`;
     dataText += `GENERATED ON: ${new Date().toLocaleString()}\n`;
     dataText += `----------------------------------------\n\n`;
     dataText += `SUMMARY\n`;
     dataText += `Total Items Sold: ${totalItemsSold}\n`;
-    dataText += `Total Revenue: ${totalRevenueLBP.toLocaleString('en-US')} L.L\n`;
+    dataText += `Total Revenue: ${todaySalesData.total.toLocaleString('en-US')} L.L\n`;
     dataText += `Unique Items Sold: ${uniqueItemsSold}\n\n`;
     
     dataText += `ITEMIZED SALES\n`;
@@ -885,26 +884,146 @@ function downloadSalesData() {
     dataText += `----------------------------------------\n`;
     
     sortedItems.forEach(item => {
-        const lbpPrice = convertToLBP(item.price);
-        const lbpTotal = convertToLBP(item.total);
-        dataText += `${item.name}\t${lbpPrice.toLocaleString('en-US')} L.L\t${item.quantity}\t${lbpTotal.toLocaleString('en-US')} L.L\n`;
+        dataText += `${item.name}\t${item.price.toLocaleString('en-US')} L.L\t${item.quantity}\t${item.total.toLocaleString('en-US')} L.L\n`;
     });
     
     dataText += `----------------------------------------\n`;
-    dataText += `TOTAL\t\t\t${totalRevenueLBP.toLocaleString('en-US')} L.L\n\n`;
+    dataText += `TOTAL\t\t\t${todaySalesData.total.toLocaleString('en-US')} L.L\n\n`;
 
     const filename = `${today}_Sales_Report.txt`;
-    const blob = new Blob([dataText], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
     
-    showToast('Report downloaded successfully', 'success');
+    // Check if device supports native file download
+    if (navigator.share && /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        // Mobile device - use Web Share API or show modal with data
+        if (navigator.canShare && navigator.canShare({ files: [new File([dataText], filename, { type: 'text/plain' })] })) {
+            // Use Web Share API with file
+            const file = new File([dataText], filename, { type: 'text/plain' });
+            navigator.share({
+                files: [file],
+                title: 'Sales Report',
+                text: 'Texas POS Sales Report'
+            }).then(() => {
+                showToast('Report shared successfully', 'success');
+            }).catch((error) => {
+                console.log('Error sharing:', error);
+                showDataModal(dataText, filename);
+            });
+        } else {
+            // Fallback to modal for mobile
+            showDataModal(dataText, filename);
+        }
+    } else {
+        // Desktop - use traditional download
+        try {
+            const blob = new Blob([dataText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('Report downloaded successfully', 'success');
+        } catch (error) {
+            console.log('Download failed, showing modal:', error);
+            showDataModal(dataText, filename);
+        }
+    }
+}
+
+// New function to show data in a modal for mobile devices
+function showDataModal(dataText, filename) {
+    const modal = document.createElement('div');
+    modal.className = 'data-export-modal';
+    modal.innerHTML = `
+        <div class="data-export-modal-content">
+            <div class="data-export-modal-header">
+                <h3>Sales Report - ${filename}</h3>
+                <button class="close-btn" onclick="closeDataModal()">&times;</button>
+            </div>
+            <div class="data-export-modal-body">
+                <p>Copy the report data below:</p>
+                <textarea id="exportDataText" readonly>${dataText}</textarea>
+                <div class="data-export-actions">
+                    <button class="data-export-btn copy" onclick="copyDataToClipboard()">
+                        <i class="fas fa-copy"></i>
+                        <span>Copy to Clipboard</span>
+                    </button>
+                    <button class="data-export-btn share" onclick="shareDataText('${filename}')" style="display: none;">
+                        <i class="fas fa-share"></i>
+                        <span>Share</span>
+                    </button>
+                </div>
+                <small class="data-export-note">
+                    On mobile: Copy the text and paste it into a notes app or send via message/email
+                </small>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Show share button if Web Share API is available
+    if (navigator.share) {
+        modal.querySelector('.share').style.display = 'flex';
+    }
+    
+    // Auto-select text on mobile
+    const textarea = document.getElementById('exportDataText');
+    textarea.focus();
+    textarea.select();
+}
+
+function closeDataModal() {
+    const modal = document.querySelector('.data-export-modal');
+    if (modal) {
+        document.body.removeChild(modal);
+    }
+}
+
+function copyDataToClipboard() {
+    const textarea = document.getElementById('exportDataText');
+    textarea.select();
+    textarea.setSelectionRange(0, 99999); // For mobile devices
+    
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            // Use modern clipboard API
+            navigator.clipboard.writeText(textarea.value).then(() => {
+                showToast('Report copied to clipboard', 'success');
+            }).catch(() => {
+                // Fallback to execCommand
+                document.execCommand('copy');
+                showToast('Report copied to clipboard', 'success');
+            });
+        } else {
+            // Fallback to execCommand
+            document.execCommand('copy');
+            showToast('Report copied to clipboard', 'success');
+        }
+    } catch (error) {
+        showToast('Please manually copy the text', 'info');
+    }
+}
+
+function shareDataText(filename) {
+    const dataText = document.getElementById('exportDataText').value;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'Texas POS Sales Report',
+            text: dataText,
+            url: window.location.href
+        }).then(() => {
+            showToast('Report shared successfully', 'success');
+            closeDataModal();
+        }).catch((error) => {
+            console.log('Error sharing:', error);
+            showToast('Sharing cancelled or failed', 'info');
+        });
+    }
 }
 
 // Utility functions
@@ -947,7 +1066,8 @@ function showToast(message, type = 'info') {
 
 function finishActivity() {
     if (confirm('Are you sure you want to end this session? This will clear all current data except saved inventory items.')) {
-        // Clear current session data but keep inventory items
+        if(prompt('ENTER THE PASSCODE:') == 'TEXAS'){
+                    // Clear current session data but keep inventory items
         cart = [];
         selectedItemId = null;
         
@@ -1008,6 +1128,7 @@ function finishActivity() {
         
         // Update current date
         updateCurrentDate();
+        }
     }
 }
 
@@ -1279,5 +1400,30 @@ document.head.insertAdjacentHTML('beforeend', `
             cursor: not-allowed;
             opacity: 0.6;
         }
-    </style>
+
+
+        /* Data Export Modal Styles */
+        .data-export-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1002;
+            padding: 1rem;
+        }
+
+        .data-export-modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 8</style>
 `);
