@@ -1117,6 +1117,10 @@ body {
     .sidebar-footer {
         display: flex;
     }
+
+    .user-profile {
+        display: none;
+    }
     
     .content-header {
         flex-direction: column;
