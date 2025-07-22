@@ -1111,7 +1111,7 @@ body {
     }
     
     .nav-btn span {
-        display: none;
+        display: flex;
     }
     
     .sidebar-footer {
