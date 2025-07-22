@@ -238,9 +238,6 @@ function renderPosPage() {
         <div class="pos-container">
             <div class="items-section">
                 <h2>Available Items</h2>
-                <div class="currency-info">
-                    <small>Prices shown in Lebanese Pounds (L.L)</small>
-                </div>
                 <div class="items-grid" id="itemsGrid"></div>
             </div>
             <div class="receipt-section">

@@ -114,6 +114,7 @@ body {
 }
 
 .nav-btn {
+    height: 50px;
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
@@ -540,7 +541,7 @@ body {
 .receipt-item-controls {
     display: flex;
     align-items: center;
-    gap: var(--spacing-xs);
+    gap: var(--spacing-md);
 }
 
 .quantity-control {
@@ -595,6 +596,7 @@ body {
     font-weight: 600;
     min-width: 60px;
     text-align: right;
+    padding-left: 10px;
 }
 
 .receipt-total {
@@ -641,6 +643,7 @@ body {
 }
 
 .receipt-btn.complete {
+    height: 50px;
     background-color: var(--primary);
     color: white;
 }
@@ -1115,6 +1118,11 @@ body {
     }
     
     .sidebar-footer {
+        display: flex;
+        padding: 0;
+    }
+
+    .user-profile{
         display: none;
     }
     
