@@ -646,16 +646,20 @@
             }
 
             resetData() {
-                this.showConfirm('This will delete ALL data including products, sales, and settings. This cannot be undone! Are you absolutely sure?', () => {
-                    localStorage.clear();
-                    location.reload();
-                }, 'Reset All Data');
+                this.requirePassword(() => {
+                    this.showConfirm('This will delete ALL data including products, sales, and settings. This cannot be undone! Are you absolutely sure?', () => {
+                        localStorage.clear();
+                        location.reload();
+                    }, 'Reset All Data');
+                });
             }
 
             exportDailyItemsTxt() {
                 this.requirePassword(() => {
-                    const today = new Date().toLocaleDateString();
-                    const todaySales = this.sales.filter(sale => new Date(sale.date).toLocaleDateString() === today);
+                    const now = new Date();
+                    const todayDate = now.toLocaleDateString();
+                    const todayTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+                    const todaySales = this.sales.filter(sale => new Date(sale.date).toLocaleDateString() === todayDate);
 
                     if (todaySales.length === 0) {
                         this.showAlert('No sales recorded for today.', 'info');
@@ -663,37 +667,65 @@
                     }
 
                     // Aggregate items
-                    const itemTotals = {};
+                    const itemStats = {};
                     todaySales.forEach(sale => {
                         sale.items.forEach(item => {
-                            if (!itemTotals[item.name]) {
-                                itemTotals[item.name] = 0;
+                            if (!itemStats[item.name]) {
+                                // Find product to get current stock and unit price
+                                const product = this.products.find(p => p.name === item.name);
+                                itemStats[item.name] = {
+                                    price: item.price,
+                                    outStock: 0,
+                                    inStock: product ? product.stock : 0,
+                                    totalPrice: 0
+                                };
                             }
-                            itemTotals[item.name] += item.quantity;
+                            itemStats[item.name].outStock += item.quantity;
+                            itemStats[item.name].totalPrice += (item.price * item.quantity);
                         });
                     });
 
-                    // Sort items by quantity descending
-                    const sortedItems = Object.entries(itemTotals)
-                        .sort(([, a], [, b]) => b - a);
+                    // Sort items by outStock descending
+                    const sortedItems = Object.entries(itemStats)
+                        .sort(([, a], [, b]) => b.outStock - a.outStock);
+
+                    const totalOutItems = Object.values(itemStats).reduce((sum, item) => sum + item.outStock, 0);
+                    const totalUniqueItems = Object.keys(itemStats).length;
+                    const totalDayPrice = todaySales.reduce((sum, s) => sum + s.total, 0);
 
                     // Format text
-                    let content = `Daily Sales Report - ${today}\n`;
-                    content += `==============================\n\n`;
-                    content += `Items sold (from most to minimum):\n\n`;
+                    let content = `Daily Sales Report - ${this.settings.storeName}\n\n`;
+                    content += `Today: ${todayDate}\n`;
+                    content += `Time: ${todayTime}\n\n`;
+                    content += `==============================================\n`;
+                    content += `N.B: items arranged by sold from max to minimum\n`;
+                    content += `==============================================\n\n`;
                     
-                    sortedItems.forEach(([name, qty], index) => {
-                        content += `${index + 1}. ${name}: ${qty}\n`;
+                    // Table Header
+                    content += `${'item'.padEnd(20)} ${'price'.padStart(10)} ${'out stock'.padStart(12)} ${'in stock'.padStart(12)} ${'total price'.padStart(15)}\n`;
+                    content += `${'-'.repeat(74)}\n`;
+
+                    // Table Rows
+                    sortedItems.forEach(([name, stats]) => {
+                        content += `${name.substring(0, 20).padEnd(20)} `;
+                        content += `${this.settings.currency}${stats.price.toFixed(2).padStart(9)} `;
+                        content += `${stats.outStock.toString().padStart(12)} `;
+                        content += `${stats.inStock.toString().padStart(12)} `;
+                        content += `${this.settings.currency}${stats.totalPrice.toFixed(2).padStart(14)}\n`;
                     });
 
-                    content += `\nTotal Transactions Today: ${todaySales.length}\n`;
-                    content += `Total Daily Revenue: ${this.settings.currency}${todaySales.reduce((sum, s) => sum + s.total, 0).toFixed(2)}\n`;
+                    content += `\n\n==============================================\n`;
+                    content += `total out stock: ${totalOutItems.toString().padEnd(10)} from total items: ${totalUniqueItems}\n`;
+                    content += `==============================================\n`;
+                    content += `total day price: ${this.settings.currency}${totalDayPrice.toFixed(2)}\n`;
+                    content += `==============================================\n`;
+                    content += `Powered By Chedix Software Solutions`;
 
                     const blob = new Blob([content], { type: 'text/plain' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `daily-sales-${Date.now()}.txt`;
+                    a.download = `${this.settings.storeName.replace(/\s+/g, '-')}-report-${Date.now()}.txt`;
                     a.click();
                     URL.revokeObjectURL(url);
                     this.isDataExported = true;

@@ -3,134 +3,325 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TexasPOS</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Professional POS System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="app-container">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <h1><i class="fas fa-cash-register"></i> TexasPOS</h1>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <div class="logo-icon"><i class="fas fa-vault"></i></div>
+                <span>TexasPOS</span>
             </div>
-            <nav class="sidebar-nav">
-                <button class="nav-btn active" onclick="loadPage('dashboard')">
-                    <i class="fas fa-home"></i>
-                    <span>Dashboard</span>
-                </button>
-                <button class="nav-btn" onclick="loadPage('pos')">
-                    <i class="fas fa-shopping-cart"></i>
+            <nav class="nav">
+                <div class="nav-item active" data-view="pos">
+                    <i class="fas fa-cash-register"></i>
                     <span>Point of Sale</span>
-                </button>
-                <button class="nav-btn" onclick="loadPage('settings')">
-                    <i class="fas fa-sliders-h"></i>
+                </div>
+                <div class="nav-item" data-view="inventory">
+                    <i class="fas fa-boxes-stacked"></i>
                     <span>Inventory</span>
-                </button>
-                <button class="nav-btn" onclick="loadPage('data')">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>Sales Analytics</span>
-                </button>
+                </div>
+                <div class="nav-item" data-view="sales">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Sales History</span>
+                </div>
+                <div class="nav-item" data-view="settings">
+                    <i class="fas fa-gears"></i>
+                    <span>Settings</span>
+                </div>
             </nav>
-            <div class="sidebar-footer">
-                <button class="nav-btn logout-btn" onclick="finishActivity()">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>End Session</span>
-                </button>
-                <div class="user-profile">
-                    <div class="avatar">AD</div>
-                    <div class="user-info">
-                        <span class="username">Admin User</span>
-                        <span class="user-role">Manager</span>
-                    </div>
+            <div class="user-info">
+                <div class="user-avatar">A</div>
+                <div>
+                    <div style="font-weight: 600;">Admin</div>
+                    <div style="font-size: 12px; opacity: 0.7;">Administrator</div>
                 </div>
             </div>
-        </aside>
+        </div>
 
-        <main class="main-content" id="mainContent">
-            <header class="content-header">
-                <div class="header-left">
-                    <h2 id="pageTitle">Dashboard</h2>
-                    <div class="breadcrumb" id="breadcrumb">Home</div>
+        <!-- Main Content -->
+        <div class="main-content">
+            <header class="header">
+                <div class="search-bar">
+                    <span class="search-icon"><i class="fas fa-magnifying-glass"></i></span>
+                    <input type="text" id="searchInput" placeholder="Search products...">
                 </div>
-                <div class="header-right">
-                    <!-- <div class="notification-bell">
-                        <i class="fas fa-bell"></i>
-                        <span class="notification-badge">3</span>
-                    </div> -->
-                    <div class="current-date" id="currentDate"></div>
+                <div class="header-actions">
+                    <span id="currentTime" style="font-weight: 500; color: var(--text-light);"></span>
                 </div>
             </header>
 
-            <div class="content-area">
-                <!-- Content will be loaded dynamically -->
-                <div class="dashboard" id="dashboardContent">
-                    <div class="stats-cards">
-                        <div class="stat-card revenue">
-                            <div class="stat-icon">
-                                <i class="fas fa-dollar-sign"></i>
-                            </div>
-                            <div class="stat-info">
-                                <h3>Today's Revenue</h3>
-                                <p id="todayRevenue">$0.00</p>
-                            </div>
+            <div class="content">
+                <!-- POS View -->
+                <div class="view active" id="posView">
+                    <div class="pos-view">
+                        <div class="products-area">
+                            <div class="categories" id="categories"></div>
+                            <div class="products-grid" id="productsGrid"></div>
                         </div>
-                        <div class="stat-card sales">
-                            <div class="stat-icon">
-                                <i class="fas fa-receipt"></i>
+
+                        <div class="cart-area">
+                            <div class="cart-header">
+                                <div class="cart-title">Current Order</div>
+                                <button class="btn btn-sm btn-danger" id="clearCart">Clear</button>
                             </div>
-                            <div class="stat-info">
-                                <h3>Today's Sales</h3>
-                                <p id="todaySales">0</p>
+                            <div class="cart-items" id="cartItems">
+                                <div class="cart-empty">
+                                    <div class="cart-empty-icon"><i class="fas fa-cart-shopping"></i></div>
+                                    <div>Cart is empty</div>
+                                    <div style="font-size: 14px; margin-top: 8px;">Add products to get started</div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="stat-card items">
-                            <div class="stat-icon">
-                                <i class="fas fa-box-open"></i>
+                            <div class="cart-summary" id="cartSummary" style="display: none;">
+                                <div class="summary-row">
+                                    <span>Subtotal</span>
+                                    <span class="summary-value" id="subtotal">$0.00</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span>Tax (10%)</span>
+                                    <span class="summary-value" id="tax">$0.00</span>
+                                </div>
+                                <div class="summary-row total">
+                                    <span>Total</span>
+                                    <span class="summary-value" id="total">$0.00</span>
+                                </div>
                             </div>
-                            <div class="stat-info">
-                                <h3>Inventory Items</h3>
-                                <p id="inventoryCount">0</p>
+                            <div class="cart-actions">
+                                <button class="btn btn-primary" id="checkoutBtn" style="flex: 1;" disabled>
+                                    Checkout
+                                </button>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="quick-actions">
-                        <h3>Quick Actions</h3>
-                        <div class="action-buttons">
-                            <button class="action-btn" onclick="loadPage('pos')">
-                                <i class="fas fa-plus-circle"></i>
-                                <span>New Sale</span>
-                            </button>
-                            <button class="action-btn" onclick="loadPage('settings')">
-                                <i class="fas fa-boxes"></i>
-                                <span>Manage Inventory</span>
-                            </button>
-                            <button class="action-btn" onclick="printReceipt()">
-                                <i class="fas fa-print"></i>
-                                <span>Print Last Receipt</span>
-                            </button>
-                            <button class="action-btn" onclick="loadPage('data')">
-                                <i class="fas fa-file-export"></i>
-                                <span>Export Data</span>
-                            </button>
+                <!-- Inventory View -->
+                <div class="view" id="inventoryView">
+                    <div class="inventory-view">
+                        <div class="inventory-header">
+                            <h1 class="inventory-title">Inventory Management</h1>
+                            <button class="btn btn-primary" id="addProductBtn"><i class="fas fa-plus"></i> Add Product</button>
+                        </div>
+                        <div class="table-container">
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Product</th>
+                                            <th>Category</th>
+                                            <th>Price</th>
+                                            <th>Stock</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="inventoryTable"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="recent-activity">
-                        <h3>Recent Transactions</h3>
-                        <div class="activity-list" id="recentTransactions">
-                            <div class="empty-state">
-                                <i class="fas fa-receipt"></i>
-                                <p>No recent transactions</p>
+                <!-- Sales History View -->
+                <div class="view" id="salesView">
+                    <div class="inventory-view">
+                        <div class="inventory-header">
+                            <h1 class="inventory-title">Sales History</h1>
+                            <div style="display: flex; gap: 12px;">
+                                <button class="btn btn-secondary" id="exportDailyTxtBtn"><i class="fas fa-file-export"></i> Export Daily (TXT)</button>
+                                <button class="btn btn-danger" id="endSessionBtn"><i class="fas fa-power-off"></i> End Session</button>
+                            </div>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-label">Total Sales</div>
+                                <div class="stat-value" id="totalSales">$0</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Total Transactions</div>
+                                <div class="stat-value" id="totalTransactions">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Average Sale</div>
+                                <div class="stat-value" id="avgSale">$0</div>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Transaction ID</th>
+                                            <th>Date</th>
+                                            <th>Items</th>
+                                            <th>Payment Method</th>
+                                            <th>Total</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="salesTable"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings View -->
+                <div class="view" id="settingsView">
+                    <div class="inventory-view">
+                        <h1 class="inventory-title">Settings</h1>
+                        <div class="table-container" style="padding: 32px;">
+                            <div class="form-group">
+                                <label class="form-label">Store Name</label>
+                                <input type="text" class="form-input" id="storeName" value="TexasPOS">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tax Rate (%)</label>
+                                <input type="number" class="form-input" id="taxRate" value="10" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Currency</label>
+                                <select class="form-select" id="currency">
+                                    <option value="$">USD ($)</option>
+                                    <option value="€">EUR (€)</option>
+                                    <option value="LL">Lebanese Lira (L.L)</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" id="saveSettingsBtn"><i class="fas fa-floppy-disk"></i> Save Settings</button>
+                            <hr style="margin: 32px 0; border: none; border-top: 1px solid var(--border);">
+                            <div class="form-group">
+                                <label class="form-label">Data Management</label>
+                                <div style="display: flex; gap: 12px; margin-top: 12px;">
+                                    <button class="btn btn-secondary" id="exportDataBtn"><i class="fas fa-file-export"></i> Export Data</button>
+                                    <button class="btn btn-secondary" id="importDataBtn"><i class="fas fa-file-import"></i> Import Data</button>
+                                    <button class="btn btn-danger" id="resetDataBtn"><i class="fas fa-trash-can"></i> Reset All Data</button>
+                                </div>
+                                <input type="file" id="importFileInput" style="display: none;" accept=".json">
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </main>
+        </div>
     </div>
 
-    <script src="script.js"></script>
+    <!-- Add/Edit Product Modal -->
+    <div class="modal" id="productModal">
+        <div class="modal-content">
+            <h2 class="modal-header" id="productModalTitle">Add Product</h2>
+            <form id="productForm">
+                <input type="hidden" id="productId">
+                <div class="form-group">
+                    <label class="form-label">Product Name</label>
+                    <input type="text" class="form-input" id="productName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select class="form-select" id="productCategory" required>
+                        <option value="Appetizers">Appetizers</option>
+                        <option value="Sandwiches">Sandwiches</option>
+                        <option value="Burgers">Burgers</option>
+                        <option value="Pizza">Pizza</option>
+                        <option value="Platers">Platers</option>
+                        <option value="Drinks">Drinks</option>
+                        <option value="Arguile">Arguile</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Price</label>
+                    <input type="number" class="form-input" id="productPrice" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Stock Quantity</label>
+                    <input type="number" class="form-input" id="productStock" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelProductBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div class="modal" id="checkoutModal">
+        <div class="modal-content">
+            <h2 class="modal-header">Checkout</h2>
+            <div id="checkoutContent">
+                <div class="form-group">
+                    <label class="form-label">Payment Method</label>
+                    <div class="payment-methods">
+                        <div class="payment-method active" data-method="cash"><i class="fas fa-money-bill-1"></i> Cash</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Customer Name (Optional)</label>
+                    <input type="text" class="form-input" id="customerName" placeholder="Enter customer name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Amount Paid</label>
+                    <input type="number" class="form-input" id="amountPaid" step="0.01" placeholder="0.00">
+                </div>
+                <div class="form-group" id="changeDisplay" style="display: none;">
+                    <label class="form-label">Change</label>
+                    <div style="font-size: 24px; font-weight: 700; color: var(--secondary); font-family: 'JetBrains Mono', monospace;" id="changeAmount">$0.00</div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelCheckoutBtn">Cancel</button>
+                    <button type="button" class="btn btn-success" id="completeCheckoutBtn">Complete Sale</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Receipt Modal -->
+    <div class="modal" id="receiptModal">
+        <div class="modal-content">
+            <div class="receipt" id="receiptContent"></div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" id="closeReceiptBtn">Close</button>
+                <button type="button" class="btn btn-primary" id="printReceiptBtn"><i class="fas fa-print"></i> Print</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Modal -->
+    <div class="modal" id="passwordModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <h2 class="modal-header">Enter Password</h2>
+            <div class="form-group">
+                <label class="form-label">System Password</label>
+                <input type="password" class="form-input" id="systemPasswordInput" placeholder="••••">
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" id="cancelPasswordBtn">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmPasswordBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Alert Modal -->
+    <div class="modal" id="alertModal">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div id="alertIcon" style="font-size: 48px; margin-bottom: 20px;"></div>
+            <h2 id="alertTitle" class="modal-header" style="margin-bottom: 12px; font-size: 20px;"></h2>
+            <p id="alertMessage" style="color: var(--text-light); margin-bottom: 24px;"></p>
+            <div class="form-actions" id="alertActions">
+                <button type="button" class="btn btn-primary" id="alertOkBtn">OK</button>
+            </div>
+            <div class="form-actions" id="confirmActions" style="display: none;">
+                <button type="button" class="btn btn-secondary" id="confirmCancelBtn">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmOkBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
 </body>
 </html>
